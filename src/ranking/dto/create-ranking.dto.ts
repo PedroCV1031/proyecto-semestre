@@ -2,14 +2,15 @@ import { IsString, IsNumber, IsArray, IsOptional } from 'class-validator';
 
 export class CreateRankingDto {
   @IsString()
-  slave_id: string; // referencia al usuario (Slave)
+  slave_id: string; // debe ser ObjectId de User
 
   @IsNumber()
   @IsOptional()
-  total_capturas?: number; // por defecto 0
+  total_capturas?: number;
 
   @IsArray()
   @IsOptional()
   @IsString({ each: true })
-  recompensas?: string[]; // array de premios asignados
+  recompensas?: string[];
 }
+

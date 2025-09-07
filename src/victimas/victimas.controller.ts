@@ -1,36 +1,37 @@
-import {Controller,Get,Post,Body,Patch,Param,Delete} from '@nestjs/common';
-import {VictimaService} from './victimas.service';
+import {Controller,Get,Post,Body,Patch,Param,Delete}from '@nestjs/common';
+import { VictimasService } from './victimas.service';
 import {CreateVictimaDto}from './dto/create-victima.dto';
 import {UpdateVictimaDto}from './dto/update-victima.dto';
 
 @Controller('victimas')
-export class VictimaController{
-  constructor(private readonly victimaService:VictimaService){}
+export class VictimasController{
+  constructor(private readonly victimasService:VictimasService){}
 
   @Post()
   create(@Body()createVictimaDto:CreateVictimaDto){
-    return this.victimaService.create(createVictimaDto);
+    return this.victimasService.create(createVictimaDto);
   }
 
   @Get()
   findAll(){
-    return this.victimaService.findAll();
+    return this.victimasService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id')id:string){
-    return this.victimaService.findOne(+id);
+    return this.victimasService.findOneById(id);
   }
 
   @Patch(':id')
-  update(@Param('id')id:string,@Body()updateVictimaDto:UpdateVictimaDto){
-    return this.victimaService.update(+id,updateVictimaDto);
+  update(@Param('id')id:string,@Body()dto:UpdateVictimaDto){
+    return this.victimasService.updateById(id,dto);
   }
 
   @Delete(':id')
   remove(@Param('id')id:string){
-    return this.victimaService.remove(+id);
+    return this.victimasService.removeById(id);
   }
 }
+
 
 

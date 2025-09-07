@@ -1,13 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
-import { User } from 'src/users/entities/user.entity';
+import { Document } from 'mongoose';
 
-@Schema({ collection: 'Leaderboard' })
+@Schema()
 export class Leaderboard extends Document {
-  @Prop({ type: Types.ObjectId, ref: User.name, required: true })
-  slave_id: Types.ObjectId; // referencia al usuario tipo Slave
+  @Prop({ type: String, ref: 'User', required: true })
+  slave_id: string; // Aquí va el ObjectId del User
 
-  @Prop({ default: 0 })
+  @Prop({ type: Number, default: 0 })
   total_capturas: number;
 
   @Prop({ type: [String], default: [] })
@@ -15,3 +14,4 @@ export class Leaderboard extends Document {
 }
 
 export const LeaderboardSchema = SchemaFactory.createForClass(Leaderboard);
+

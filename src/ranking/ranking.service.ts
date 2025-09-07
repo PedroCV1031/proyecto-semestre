@@ -1,54 +1,76 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Leaderboard } from './entities/leaderboard.entity';
+import { Leaderboard } from './entities/ranking.entity';
 import { User } from 'src/users/entities/user.entity';
+import { Victima } from 'src/victimas/entities/victima.entity';
 
 @Injectable()
 export class LeaderboardService {
   constructor(
-    @InjectModel(Leaderboard.name)
-    private readonly leaderboardModel: Model<Leaderboard>,
-
-    @InjectModel(User.name)
-    private readonly userModel: Model<User>,
+    @InjectModel(Leaderboard.name) private readonly leaderboardModel: Model<Leaderboard>,
+    @InjectModel(User.name) private readonly userModel: Model<User>,
+    @InjectModel(Victima.name) private readonly victimaModel: Model<Victima>,
   ) {}
 
-  // GET /leaderboard → ranking de slaves
   async getLeaderboard() {
-    return this.leaderboardModel
-      .find()
-      .populate('slave_id', 'username email') // traer datos básicos del usuario
-      .sort({ total_capturas: -1 }) // ordenar por más capturas
-      .exec();
+    const slaves = await this.userModel.find({ roles: 'slave' }).lean();
+    
+    const ranking: { name: string; total_capturas: number }[] = [];
+    
+    for (const slave of slaves) {
+      // Contar directamente desde victimas (fuente de verdad)
+      const victimasCount = await this.victimaModel.countDocuments({
+        captured_by: slave._id
+      });
+      
+      // Sincronizar o crear en leaderboards
+      await this.leaderboardModel.findOneAndUpdate(
+        { slave_id: slave._id },
+        { 
+          slave_id: slave._id,
+          total_capturas: victimasCount 
+        },
+        { 
+          upsert: true, // Crear si no existe
+          new: true 
+        }
+      );
+      
+      ranking.push({
+        name: slave.name,
+        total_capturas: victimasCount,
+      });
+    }
+    
+    ranking.sort((a, b) => b.total_capturas - a.total_capturas);
+    
+    return ranking.map((item, index) => ({
+      ranking: index + 1,
+      name: item.name,
+      total_capturas: item.total_capturas,
+    }));
   }
 
-  // POST /leaderboard/recompensas/:slaveId → asignar recompensa
   async assignReward(slaveId: string, reward: string) {
-    const slaveStats = await this.leaderboardModel
-      .findOne({ slave_id: slaveId })
-      .exec();
-
-    if (!slaveStats) {
-      throw new NotFoundException(`No se encontraron estadísticas para el slave ${slaveId}`);
+    const user = await this.userModel.findById(slaveId).exec();
+    if (!user || user.roles !== 'slave') {
+      throw new Error(`Usuario con id ${slaveId} no existe o no es un slave`);
     }
 
-    slaveStats.recompensas.push(reward);
-    await slaveStats.save();
-
-    return slaveStats;
-  }
-
-  // Extra: inicializar stats si no existe
-  async ensureStatsForSlave(slaveId: string) {
-    let stats = await this.leaderboardModel.findOne({ slave_id: slaveId });
+    let stats = await this.leaderboardModel.findOne({ slave_id: slaveId }).exec();
     if (!stats) {
+      // Contar capturas reales y crear stats
+      const realCount = await this.victimaModel.countDocuments({ captured_by: slaveId });
       stats = await this.leaderboardModel.create({
         slave_id: slaveId,
-        total_capturas: 0,
+        total_capturas: realCount,
         recompensas: [],
       });
     }
+
+    stats.recompensas.push(reward);
+    await stats.save();
     return stats;
   }
 }

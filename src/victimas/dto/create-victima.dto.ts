@@ -12,8 +12,8 @@ export class CreateVictimaDto {
   @IsString()
   @MinLength(2)
   transformation_status:string;
-  @IsInt()
-  captured_by:number;
+  @IsString()
+  captured_by:string;
   @IsDateString()
   capture_date:string;
   @IsDateString()

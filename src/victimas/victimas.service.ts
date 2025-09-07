@@ -1,42 +1,66 @@
-import {Injectable,NotFoundException} from '@nestjs/common';
-import {InjectModel} from '@nestjs/mongoose';
-import {Model} from 'mongoose';
-import {Victima} from './entities/victima.entity';
-import {CreateVictimaDto} from './dto/create-victima.dto';
-import {UpdateVictimaDto} from './dto/update-victima.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Victima } from './entities/victima.entity';
+import { CreateVictimaDto } from './dto/create-victima.dto';
+import { UpdateVictimaDto } from './dto/update-victima.dto';
+import { Leaderboard } from '../ranking/entities/ranking.entity';
 
 @Injectable()
-export class VictimaService{
-  constructor(@InjectModel(Victima.name) private readonly victimaModel:Model<Victima>){}
+export class VictimasService {
+  constructor(
+    @InjectModel(Victima.name) private readonly victimaModel: Model<Victima>,
+    @InjectModel(Leaderboard.name) private readonly leaderboardModel: Model<Leaderboard>,
+  ) {}
 
-  async create(createVictimaDto:CreateVictimaDto){
-    return this.victimaModel.create(createVictimaDto);
+  async create(dto: CreateVictimaDto) {
+    // Asegurar que captured_by se guarde como ObjectId
+    const victim = await this.victimaModel.create({
+      ...dto,
+      captured_by: new Types.ObjectId(dto.captured_by),
+    });
+
+    // Inicializar stats en leaderboard si no existen
+    let stats = await this.leaderboardModel.findOne({ slave_id: dto.captured_by });
+    if (!stats) {
+      stats = await this.leaderboardModel.create({
+        slave_id: dto.captured_by,
+        total_capturas: 0,
+        recompensas: [],
+      });
+    }
+
+    // Incrementar capturas en leaderboard
+    await this.leaderboardModel.updateOne(
+      { slave_id: dto.captured_by },
+      { $inc: { total_capturas: 1 } },
+    );
+
+    return victim;
   }
 
-  findAll(){
+  findAll() {
     return this.victimaModel.find({});
   }
 
-  async findOne(id:number){
-    const victima=await this.victimaModel.findOne({id});
-    if(!victima){
-      throw new NotFoundException('Víctima no encontrada');
-    }
-    return victima;
+  async findOneById(id: string) {
+    const victim = await this.victimaModel.findById(id);
+    if (!victim) throw new NotFoundException('Victima no encontrada');
+    return victim;
   }
 
-  async update(id:number,updateVictimaDto:UpdateVictimaDto){
-    const victima=await this.findOne(id);
-    await this.victimaModel.updateOne({id},updateVictimaDto);
-    return this.findOne(id);
+  async updateById(id: string, dto: UpdateVictimaDto) {
+    await this.victimaModel.updateOne({ _id: id }, dto);
+    return this.findOneById(id);
   }
 
-  async remove(id:number){
-    const victima=await this.findOne(id);
-    await this.victimaModel.deleteOne({id});
-    return victima;
+  async removeById(id: string) {
+    const victim = await this.findOneById(id);
+    await this.victimaModel.deleteOne({ _id: id });
+    return victim;
   }
 }
+
 
 
 

@@ -1,4 +1,5 @@
 import {Module}from '@nestjs/common';
+import { RankingModule } from './ranking/ranking.module';
 import {AppController}from './app.controller';
 import {AppService}from './app.service';
 import {VictimasModule}from './victimas/victimas.module';
@@ -11,6 +12,7 @@ import {ConfigModule}from '@nestjs/config';
     ConfigModule.forRoot({isGlobal:true}),
     MongooseModule.forRoot(process.env.DATABASE_URL??""),
     VictimasModule,
+    RankingModule,
   ],
   controllers:[AppController],
   providers:[AppService],

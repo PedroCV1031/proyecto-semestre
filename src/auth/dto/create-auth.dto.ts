@@ -1,13 +1,30 @@
-import {IsEmail,IsString,IsStrongPassword,MinLength}from 'class-validator';
+import {IsEmail,IsString,IsStrongPassword,MinLength,IsEnum}from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { Role } from '../enums/role.enum';
 
 export class CreateAuthDto{
+  @ApiProperty({
+    description: 'Email del usuario',
+    example: 'usuario@ejemplo.com',
+    format: 'email'
+  })
   @IsEmail()
   email:string;
 
+  @ApiProperty({
+    description: 'Nombre completo del usuario',
+    example: 'Juan Pérez',
+    minLength: 2
+  })
   @IsString()
   @MinLength(2)
   name:string;
 
+  @ApiProperty({
+    description: 'Contraseña del usuario (mínimo 8 caracteres, 1 mayúscula, 1 minúscula, 1 número, 1 símbolo)',
+    example: 'MiPassword123!',
+    minLength: 8
+  })
   @IsStrongPassword({
     minLength:8,
     minLowercase:1,
@@ -17,7 +34,12 @@ export class CreateAuthDto{
   })
   password:string;
 
-  @IsString()
-  role:string;
+  @ApiProperty({
+    description: 'Rol del usuario en el sistema',
+    example: Role.SLAVE,
+    enum: Role
+  })
+  @IsEnum(Role)
+  role:Role;
 }
 

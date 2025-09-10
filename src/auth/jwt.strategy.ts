@@ -18,6 +18,13 @@ export class JwtStrategy extends PassportStrategy(Strategy){
   async validate(payload:JwtPayload){
     const user=await this.userModel.findOne({email:payload.email});
     if(!user)throw new UnauthorizedException('User not found');
-    return user;
+    
+    // Return user object with roles for role-based access control
+    return {
+      _id: user._id,
+      email: user.email,
+      name: user.name,
+      roles: user.roles
+    };
   }
 }

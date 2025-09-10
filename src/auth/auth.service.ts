@@ -5,9 +5,10 @@ import * as bcrypt from 'bcrypt';
 import {JwtService}from '@nestjs/jwt';
 import {User}from '../users/entities/user.entity';
 import {CreateAuthDto}from './dto/create-auth.dto';
+import { Role } from './enums/role.enum';
 import { LoginAuthDto } from './dto/login-auth.dto';
 
-export interface JwtPayload{email:string;roles:string;}
+export interface JwtPayload{email:string;roles:Role;}
 
 @Injectable()
 export class AuthService{
@@ -19,7 +20,7 @@ export class AuthService{
     const user = new this.userModel({
       ...createAuthDto,
       password: hash,
-      roles: createAuthDto.role // Use the role from DTO, not hardcoded array
+      roles: createAuthDto.role // Use the role from DTO
     });
     return await user.save();
   } catch (error) {

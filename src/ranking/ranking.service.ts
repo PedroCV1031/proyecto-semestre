@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Leaderboard } from './entities/ranking.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Victima } from 'src/victimas/entities/victima.entity';
+import { Role } from '../auth/enums/role.enum';
 
 @Injectable()
 export class LeaderboardService {
@@ -14,7 +15,7 @@ export class LeaderboardService {
   ) {}
 
   async getLeaderboard() {
-    const slaves = await this.userModel.find({ roles: 'slave' }).lean();
+    const slaves = await this.userModel.find({ roles: Role.SLAVE }).lean();
     
     const ranking: { name: string; total_capturas: number }[] = [];
     
@@ -54,7 +55,7 @@ export class LeaderboardService {
 
   async assignReward(slaveId: string, reward: string) {
     const user = await this.userModel.findById(slaveId).exec();
-    if (!user || user.roles !== 'slave') {
+    if (!user || user.roles !== Role.SLAVE) {
       throw new Error(`Usuario con id ${slaveId} no existe o no es un slave`);
     }
 

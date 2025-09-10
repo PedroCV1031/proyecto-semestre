@@ -12,7 +12,7 @@ import {User,UserSchema}from '../users/entities/user.entity';
     PassportModule,
     JwtModule.register({
       secret:process.env.SECRET_KEY||'devsecret',
-      signOptions:{expiresIn:'2h'}
+      signOptions:{expiresIn:'1d'}
     }),
     MongooseModule.forFeature([{name:User.name,schema:UserSchema}])
   ],

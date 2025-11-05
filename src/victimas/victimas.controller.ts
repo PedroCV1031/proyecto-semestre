@@ -1,4 +1,4 @@
-import {Controller,Get,Post,Body,Patch,Param,Delete,UseGuards}from '@nestjs/common';
+import {Controller,Get,Post,Body,Patch,Param,Delete,UseGuards,Req}from '@nestjs/common';
 import { VictimasService } from './victimas.service';
 import {CreateVictimaDto}from './dto/create-victima.dto';
 import {UpdateVictimaDto}from './dto/update-victima.dto';
@@ -36,11 +36,12 @@ export class VictimasController{
   })
   @ApiBody({ type: CreateVictimaDto })
   @Post()
-  create(@Body()createVictimaDto:CreateVictimaDto){
-    return this.victimasService.create(createVictimaDto);
+  create(@Body()createVictimaDto:CreateVictimaDto, @Req() req){
+    const userId = req.user._id;
+    return this.victimasService.create(createVictimaDto, userId);
   }
 
-  @Roles(Role.MASTER, Role.DEVELOPER)
+  @Roles(Role.MASTER, Role.DEVELOPER, Role.SLAVE)
   @ApiOperation({ 
     summary: 'Obtener todas las víctimas',
     description: 'Retorna una lista de todas las víctimas capturadas (Solo MASTER y DEVELOPER)'

@@ -13,18 +13,18 @@ export class VictimasService {
     @InjectModel(Leaderboard.name) private readonly leaderboardModel: Model<Leaderboard>,
   ) {}
 
-  async create(dto: CreateVictimaDto) {
+  async create(dto: CreateVictimaDto, capturedBy:string) {
     // Asegurar que captured_by se guarde como ObjectId
     const victim = await this.victimaModel.create({
       ...dto,
-      captured_by: new Types.ObjectId(dto.captured_by),
+      captured_by: new Types.ObjectId(capturedBy),
     });
 
     // Inicializar stats en leaderboard si no existen
-    let stats = await this.leaderboardModel.findOne({ slave_id: dto.captured_by });
+    let stats = await this.leaderboardModel.findOne({ slave_id: capturedBy });
     if (!stats) {
       stats = await this.leaderboardModel.create({
-        slave_id: dto.captured_by,
+        slave_id: capturedBy,
         total_capturas: 0,
         recompensas: [],
       });
@@ -32,7 +32,7 @@ export class VictimasService {
 
     // Incrementar capturas en leaderboard
     await this.leaderboardModel.updateOne(
-      { slave_id: dto.captured_by },
+      { slave_id: capturedBy },
       { $inc: { total_capturas: 1 } },
     );
 

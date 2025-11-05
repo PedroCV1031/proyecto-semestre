@@ -40,13 +40,6 @@ export class CreateVictimaDto {
   transformation_status:string;
 
   @ApiProperty({
-    description: 'ID del usuario que capturó la víctima',
-    example: '507f1f77bcf86cd799439011'
-  })
-  @IsString()
-  captured_by:string;
-
-  @ApiProperty({
     description: 'Fecha de captura',
     example: '2024-01-01T00:00:00.000Z',
     format: 'date-time'

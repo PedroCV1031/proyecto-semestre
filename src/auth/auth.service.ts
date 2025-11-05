@@ -8,7 +8,7 @@ import {CreateAuthDto}from './dto/create-auth.dto';
 import { Role } from './enums/role.enum';
 import { LoginAuthDto } from './dto/login-auth.dto';
 
-export interface JwtPayload{email:string;roles:Role;}
+export interface JwtPayload{email:string;roles:Role;id:string}
 
 @Injectable()
 export class AuthService{
@@ -36,7 +36,7 @@ export class AuthService{
     if(!user)throw new UnauthorizedException('Invalid credentials');
     const isValid=bcrypt.compareSync(password,user.password);
     if(!isValid)throw new UnauthorizedException('Invalid credentials');
-    const jwtPayload:JwtPayload={email:user.email,roles:user.roles};
+    const jwtPayload:JwtPayload={email:user.email,roles:user.roles,id:String(user._id)};
     const token=this.getJwtToken(jwtPayload);
     return {user,token};
   }
